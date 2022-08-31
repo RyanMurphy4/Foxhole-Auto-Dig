@@ -6,7 +6,8 @@ class Finder:
     def __init__(self):
         pass
 
-    def find_item(self, needle, haystack, threshold=0.5):
+    @staticmethod
+    def find_item(needle, haystack, threshold=0.5):
 
         bmat_width = needle.shape[0]
         bmat_height = needle.shape[1]
@@ -47,3 +48,19 @@ class Finder:
 
 
 
+
+"""
+
+        my_screenshot = self.capper.take_screenshot()
+        my_screenshot = np.array(my_screenshot)
+        my_screenshot = cv.cvtColor(my_screenshot, cv.COLOR_RGB2GRAY)
+
+        (thresh, thing) = cv.threshold(my_screenshot, 127, 255, cv.THRESH_BINARY)
+        (thresh1, thing1) = cv.threshold(self.text_not, 127, 255, cv.THRESH_BINARY)
+        (thresh2, thing2) = cv.threshold(self.text_perc, 127, 255, cv.THRESH_BINARY)
+
+        is_digging = self.find_item(needle=thing1, haystack=thing, threshold=.80)
+        is_not_digging = self.find_item(needle=thing2, haystack=thing, threshold=.80)
+
+
+"""

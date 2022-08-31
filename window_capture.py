@@ -9,7 +9,8 @@ class Screencap:
     def __init__(self):
         pass
 
-    def take_screenshot(self):
+    @staticmethod
+    def take_screenshot():
 
         hwnd = win32gui.FindWindow(None, 'War  ')
 
@@ -45,3 +46,5 @@ class Screencap:
         mfcDC.DeleteDC()
         win32gui.ReleaseDC(hwnd, hwndDC)
         return im
+
+
