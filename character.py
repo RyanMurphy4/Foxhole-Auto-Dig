@@ -111,3 +111,6 @@ class Character:
         # if self.is_close_x():
         keyboard.release('a')
         self.is_moving_left = False
+
+
+print("I love big poopy")
