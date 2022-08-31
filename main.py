@@ -33,3 +33,5 @@ if __name__ == '__main__':
     while True:
         detect_bp()
         print(mike.bp_locations)
+
+'BITCOIN IS GOING TO THE MOON'
