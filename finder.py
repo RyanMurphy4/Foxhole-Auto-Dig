@@ -7,60 +7,28 @@ class Finder:
         pass
 
     @staticmethod
-    def find_item(needle, haystack, threshold=0.5):
+    def find_items(self, image, img_to_match, debug=False, threshold = 0.9):
+        box_centers = []
 
-        bmat_width = needle.shape[0]
-        bmat_height = needle.shape[1]
+        # Get width and height of image to match
+        w, h = img_to_match.shape[::-1]
 
-        result = cv.matchTemplate(needle, haystack, cv.TM_CCOEFF_NORMED)
+        # Matches the template with instances in the image
+        res = cv.matchTemplate(image,img_to_match, cv.TM_CCOEFF_NORMED)
+        loc = np.where(res >= threshold)
 
-        locations = np.where(result >= threshold)
-        locations = list(zip(*locations[::-1]))
+        if loc[0].size == 0 and loc[1].size == 0:
+            return None # NOTE: You probably want code to check if return == None
 
-        rectangles = []
+        for pt in zip(*loc[::-1]):
+            # Finds center of box 
+            box_center = ((pt[0] + w + pt[0]) / 2, (pt[1] + h + pt[1]) / 2)
+            box_centers.append(box_center)
 
-        for location in locations:
-            rect = [int(location[0]), int(location[1]), bmat_width, bmat_height]
-            rectangles.append(rect)
-            rectangles.append(rect)
+            if debug:
+                cv.rectangle(image, pt, (pt[0] + w, pt[1] + h), (0,0,255), 1)
+        if debug:
+            cv.imwrite('res.jpg', image)
 
-        rectangles, weights = cv.groupRectangles(rectangles, groupThreshold=1, eps=0.5)
-
-        center_points = []
-
-        if len(rectangles):
-            line_color = (0, 0, 255)
-            line_type = cv.LINE_4
-
-            for (x,y,w,h) in rectangles:
-
-                # print(x, y, w, h)
-                center_x = x + int(w/2)
-                center_y = y + int(h/2)
-                center_points.append((center_x, center_y))
-
-                top_left = (x, y)
-                bottom_right = (x+h, y+w)
-
-                cv.rectangle(haystack, top_left, bottom_right, color=line_color, thickness=1, lineType=line_type)
-        return center_points
-
-
-
-
-
-"""
-
-        my_screenshot = self.capper.take_screenshot()
-        my_screenshot = np.array(my_screenshot)
-        my_screenshot = cv.cvtColor(my_screenshot, cv.COLOR_RGB2GRAY)
-
-        (thresh, thing) = cv.threshold(my_screenshot, 127, 255, cv.THRESH_BINARY)
-        (thresh1, thing1) = cv.threshold(self.text_not, 127, 255, cv.THRESH_BINARY)
-        (thresh2, thing2) = cv.threshold(self.text_perc, 127, 255, cv.THRESH_BINARY)
-
-        is_digging = self.find_item(needle=thing1, haystack=thing, threshold=.80)
-        is_not_digging = self.find_item(needle=thing2, haystack=thing, threshold=.80)
-
-
-"""
+        
+        return box_centers 
