@@ -21,6 +21,7 @@ def detect_bp():
     locations = result.pandas().xyxy[0]
     locations_list = list(locations.iterrows())
     mike.bp_locations = locations_list
+    return locations_list
 
 if __name__ == '__main__':
     model = torch.hub.load('ultralytics/yolov5', 'custom', path='best_seg_.938.pt')
@@ -31,7 +32,6 @@ if __name__ == '__main__':
     mike.position_mouse()
 
     while True:
-        detect_bp()
-        print(mike.bp_locations)
+        bp_locations = detect_bp()
+        mike.nav_camera(bp_locations)
 
-'BITCOIN IS GOING TO THE MOON'

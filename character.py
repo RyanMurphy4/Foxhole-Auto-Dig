@@ -10,7 +10,10 @@ class Character:
         self.px = 750
         self.py = 950
         self.bp_locations = ''
+        self.center_coords = ""
         self.closest_bp = ''
+        self.camera_positioned = False
+
 
         self.is_moving_right = False
         self.is_moving_left = False
@@ -42,6 +45,7 @@ class Character:
             center_y = ((y_max - y_min) / 2) + y_min
 
             center_xy_list.append((center_x, center_y))
+            self.center_coords = center_xy_list
 
         return center_xy_list
 
@@ -113,4 +117,36 @@ class Character:
         self.is_moving_left = False
 
 
-print("I love big poopy")
+    def turn_camera_left(self):
+        keyboard.press('.')
+        time.sleep(.007)
+        keyboard.release('.')
+
+    def turn_camera_right(self):
+        keyboard.press(',')
+        time.sleep(.007)
+        keyboard.release(',')
+
+
+    '''
+    Attempting to line top middle of screen up with center of blueprint.
+    
+    '''
+
+    def nav_camera(self, locations):
+        self.get_post_coords(locations)
+        self.closest_bp = self.get_closest(self.center_coords)
+
+        if self.closest_bp: #Avoid errors, if no BP is detected, do nothing..
+            bp_x, bp_y = self.closest_bp
+
+        if not self.camera_positioned:
+            if abs(bp_x - 940) > 50:
+                if bp_x < 940:
+                    self.turn_camera_left()
+                elif bp_x > 940:
+                    self.turn_camera_right()
+            else:
+                self.camera_positioned = True
+                print("Lined up them lines.")
+
