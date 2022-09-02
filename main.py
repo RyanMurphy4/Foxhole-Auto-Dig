@@ -1,12 +1,5 @@
-import time
-from math import sqrt
-
-import keyboard
 import torch
-import numpy as np
-import pandas
 import multiprocessing as mp
-from finder import Finder
 from window_capture import Screencap
 from character import Character
 
@@ -25,7 +18,7 @@ def detect_bp():
 
 if __name__ == '__main__':
     model = torch.hub.load('ultralytics/yolov5', 'custom', path='best_seg_.938.pt')
-    model.conf = .90
+    model.conf = .85
     climb_process = mp.Process(target=mike.always_climb)  # Commented out for testing. Un-comment these two lines when testing movement.
     climb_process.start()
 
@@ -33,5 +26,8 @@ if __name__ == '__main__':
 
     while True:
         bp_locations = detect_bp()
-        mike.nav_camera(bp_locations, 40)
+        # mike.nav_camera(40)
+        # mike.move_to_center()
+        # mike.check_if_digging()
+        mike.lazy()
 

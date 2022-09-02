@@ -2,13 +2,18 @@ import keyboard
 import time
 from math import sqrt
 import mouse
+import numpy as np
+import cv2 as cv
+from finder import Finder
 from window_capture import Screencap
+
+perc_img = cv.imread('digging_img/perc.png', cv.IMREAD_GRAYSCALE)
 
 
 class Character:
     def __init__(self):
-        self.px = 750
-        self.py = 950
+        self.px = 950
+        self.py = 750
         self.bp_locations = ''
         self.center_coords = ""
         self.closest_bp = ''
@@ -18,6 +23,8 @@ class Character:
 
         self.is_moving_up = False
         self.reached_bp = False
+        self.is_digging = False
+
 
     #Seperate process that constantly presses space, this is to avoid your character getting stuck on other blueprints/objects
     def always_climb(self):
@@ -64,14 +71,16 @@ class Character:
         return closest_point
 
     def is_close_x(self, closest_bp):
-        px = self.px
-        bx = closest_bp[0]
-        return abs(px - bx) < 25
+        if closest_bp:
+            px = self.px
+            bx = closest_bp[0]
+            return abs(px - bx) < 50
 
     def is_close_y(self, closest_bp):
-        py = self.py
-        by = closest_bp[1]
-        return abs(py - by) < 25
+        if closest_bp:
+            py = self.py
+            by = closest_bp[1]
+            return abs(py - by) < 50
 
     def reached_center(self):
         if self.is_close_x(self.closest_bp) and self.is_close_y(self.closest_bp):
@@ -87,18 +96,24 @@ class Character:
         keyboard.release('w')
         self.is_moving_up = False
 
+    def start_digging(self):
+        mouse.press('left')
+
+    def stop_digging(self):
+        mouse.release('left')
+
     def turn_camera_left(self):
         keyboard.press('.')
-        time.sleep(.005)
+        time.sleep(.004)
         keyboard.release('.')
 
     def turn_camera_right(self):
         keyboard.press(',')
-        time.sleep(.005)
+        time.sleep(.004)
         keyboard.release(',')
 
-    def nav_camera(self, locations, threshold):
-        self.get_post_coords(locations)
+    def nav_camera(self, threshold):
+        self.get_post_coords(self.bp_locations)
         self.closest_bp = self.get_closest(self.center_coords)
 
         if self.closest_bp: #Avoid errors, if no BP is detected, do nothing..
@@ -108,4 +123,38 @@ class Character:
                     self.turn_camera_left()
                 elif bp_x > 940:
                     self.turn_camera_right()
+
+    def move_to_center(self):
+        self.center_condition = self.reached_center()
+        if not self.center_condition:
+            self.nav_camera(40)
+            self.move_up()
+        elif self.center_condition:
+            self.stop_up()
+
+    def check_if_digging(self):
+        screenshot = Screencap.take_screenshot()
+        screenshot = np.array(screenshot)
+        screenshot = cv.cvtColor(screenshot, cv.COLOR_RGB2GRAY)
+
+        (thresh, thing) = cv.threshold(screenshot, 127, 255, cv.THRESH_BINARY)
+        (thresh1, digging_bw) = cv.threshold(perc_img, 127, 255, cv.THRESH_BINARY)
+
+        currently_digging = Finder.find_items(image=thing, img_to_match=digging_bw, debug=False, threshold=.8)
+
+        if currently_digging:
+            if len(currently_digging):
+                self.is_digging = True
+        else:
+            self.is_digging = False
+
+
+        print(f"SELF_IS_DIGGING: {self.is_digging}\n")
+        print(f"(currently_digging): {currently_digging}\n")
+
+    def lazy(self):
+        self.move_to_center()
+        self.check_if_digging()
+        if self.center_condition and not self.is_digging:
+            self.start_digging()
 

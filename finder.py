@@ -7,11 +7,12 @@ class Finder:
         pass
 
     @staticmethod
-    def find_items(self, image, img_to_match, debug=False, threshold = 0.9):
+    def find_items(image, img_to_match, debug=False, threshold=0.9):
         box_centers = []
 
         # Get width and height of image to match
-        w, h = img_to_match.shape[::-1]
+        w = img_to_match.shape[0]
+        h = img_to_match.shape[1]
 
         # Matches the template with instances in the image
         res = cv.matchTemplate(image,img_to_match, cv.TM_CCOEFF_NORMED)
