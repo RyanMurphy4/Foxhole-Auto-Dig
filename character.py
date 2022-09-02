@@ -14,12 +14,9 @@ class Character:
         self.closest_bp = ''
         self.camera_positioned = False
 
+        self.reached_center = False
 
-        self.is_moving_right = False
-        self.is_moving_left = False
         self.is_moving_up = False
-        self.is_moving_down = False
-
         self.reached_bp = False
 
     #Seperate process that constantly presses space, this is to avoid your character getting stuck on other blueprints/objects
@@ -86,51 +83,27 @@ class Character:
         keyboard.release('w')
         self.is_moving_up = False
 
-    def move_down(self):
-        # if py < by:
-        keyboard.press('s')
-        self.is_moving_down = True
-
-    def stop_down(self):
-        # if self.is_close_y():
-        keyboard.release('s')
-        self.is_moving_down = False
-
-    def move_right(self):
-        # if px < bx:
-        keyboard.press('d')
-        self.is_moving_right = True
-
-    def stop_right(self):
-        # if self.is_close_x():
-        keyboard.release('d')
-        self.is_moving_right = False
-
-    def move_left(self):
-        # if px > bx:
-        keyboard.press('a')
-        self.is_moving_left = True
-
-    def stop_left(self):
-        # if self.is_close_x():
-        keyboard.release('a')
-        self.is_moving_left = False
-
 
     def turn_camera_left(self):
         keyboard.press('.')
-        time.sleep(.007)
+        time.sleep(.001)
         keyboard.release('.')
 
     def turn_camera_right(self):
         keyboard.press(',')
-        time.sleep(.007)
+        time.sleep(.001)
         keyboard.release(',')
+
+    def reached_center(self):
+        if self.is_close_x(self.closest_bp) and self.is_close_y(self.closest_bp):
+            return True
+
+
+
 
 
     '''
     Attempting to line top middle of screen up with center of blueprint.
-    
     '''
 
     def nav_camera(self, locations):
@@ -140,13 +113,13 @@ class Character:
         if self.closest_bp: #Avoid errors, if no BP is detected, do nothing..
             bp_x, bp_y = self.closest_bp
 
-        if not self.camera_positioned:
-            if abs(bp_x - 940) > 50:
-                if bp_x < 940:
-                    self.turn_camera_left()
-                elif bp_x > 940:
-                    self.turn_camera_right()
-            else:
-                self.camera_positioned = True
-                print("Lined up them lines.")
+            if not self.camera_positioned:
+                if abs(bp_x - 940) > 40:
+                    if bp_x < 940:
+                        self.turn_camera_left()
+                    elif bp_x > 940:
+                        self.turn_camera_right()
+                else:
+                    # self.camera_positioned = True
+                    print("Lined up them lines.")
 
