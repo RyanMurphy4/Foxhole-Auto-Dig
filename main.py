@@ -26,12 +26,12 @@ def detect_bp():
 if __name__ == '__main__':
     model = torch.hub.load('ultralytics/yolov5', 'custom', path='best_seg_.938.pt')
     model.conf = .90
-    # climb_process = mp.Process(target=mike.always_climb)  # Commented out for testing. Un-comment these two lines when testing movement.
-    # climb_process.start()
+    climb_process = mp.Process(target=mike.always_climb)  # Commented out for testing. Un-comment these two lines when testing movement.
+    climb_process.start()
 
     mike.position_mouse()
 
     while True:
         bp_locations = detect_bp()
-        mike.nav_camera(bp_locations)
+        mike.nav_camera(bp_locations, 40)
 

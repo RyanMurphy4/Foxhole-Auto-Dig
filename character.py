@@ -14,7 +14,7 @@ class Character:
         self.closest_bp = ''
         self.camera_positioned = False
 
-        self.reached_center = False
+        self.center_condition = False
 
         self.is_moving_up = False
         self.reached_bp = False
@@ -72,7 +72,11 @@ class Character:
         py = self.py
         by = closest_bp[1]
         return abs(py - by) < 25
-    
+
+    def reached_center(self):
+        if self.is_close_x(self.closest_bp) and self.is_close_y(self.closest_bp):
+            return True
+
     def move_up(self):
         # if py > by:
         keyboard.press('w')
@@ -83,43 +87,25 @@ class Character:
         keyboard.release('w')
         self.is_moving_up = False
 
-
     def turn_camera_left(self):
         keyboard.press('.')
-        time.sleep(.001)
+        time.sleep(.005)
         keyboard.release('.')
 
     def turn_camera_right(self):
         keyboard.press(',')
-        time.sleep(.001)
+        time.sleep(.005)
         keyboard.release(',')
 
-    def reached_center(self):
-        if self.is_close_x(self.closest_bp) and self.is_close_y(self.closest_bp):
-            return True
-
-
-
-
-
-    '''
-    Attempting to line top middle of screen up with center of blueprint.
-    '''
-
-    def nav_camera(self, locations):
+    def nav_camera(self, locations, threshold):
         self.get_post_coords(locations)
         self.closest_bp = self.get_closest(self.center_coords)
 
         if self.closest_bp: #Avoid errors, if no BP is detected, do nothing..
             bp_x, bp_y = self.closest_bp
-
-            if not self.camera_positioned:
-                if abs(bp_x - 940) > 40:
-                    if bp_x < 940:
-                        self.turn_camera_left()
-                    elif bp_x > 940:
-                        self.turn_camera_right()
-                else:
-                    # self.camera_positioned = True
-                    print("Lined up them lines.")
+            if abs(bp_x - 940) > threshold: #If bp center isn't within 'threshold' amount of pixels,
+                if bp_x < 940:
+                    self.turn_camera_left()
+                elif bp_x > 940:
+                    self.turn_camera_right()
 
