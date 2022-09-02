@@ -10,6 +10,7 @@ from window_capture import Screencap
 perc_img = cv.imread('digging_img/perc.png', cv.IMREAD_GRAYSCALE)
 
 
+
 class Character:
     def __init__(self):
         self.px = 950
@@ -25,6 +26,10 @@ class Character:
         self.reached_bp = False
         self.is_digging = False
 
+    def display_attr(self):
+        print(f"self.center_condition: {self.center_condition}")
+        print(f"self.is_digging: {self.is_digging}")
+        print(f"self.closest_bp: {self.closest_bp}")
 
     #Seperate process that constantly presses space, this is to avoid your character getting stuck on other blueprints/objects
     def always_climb(self):
@@ -34,6 +39,51 @@ class Character:
 
     def position_mouse(self):
         mouse.move(940, 0)
+
+    def is_close_x(self, closest_bp):
+        if closest_bp:
+            px = self.px
+            bx = closest_bp[0]
+            return abs(px - bx) < 50
+
+    def is_close_y(self, closest_bp):
+        if closest_bp:
+            py = self.py
+            by = closest_bp[1]
+            return abs(py - by) < 50
+
+    def reached_center(self):
+        if self.is_close_x(self.closest_bp) and self.is_close_y(self.closest_bp):
+            return True
+        else:
+            return False
+
+    def move_up(self):
+        # if py > by:
+        keyboard.press('w')
+        self.is_moving_up = True
+
+    def stop_up(self):
+        # if self.is_close_y():
+        keyboard.release('w')
+        self.is_moving_up = False
+
+    def start_digging(self):
+        self.stop_up()
+        mouse.press('left')
+
+    def stop_digging(self):
+        mouse.release('left')
+
+    def turn_camera_left(self):
+        keyboard.press('.')
+        time.sleep(.005)
+        keyboard.release('.')
+
+    def turn_camera_right(self):
+        keyboard.press(',')
+        time.sleep(.005)
+        keyboard.release(',')
 
     #Takes a list of locations that contains the top left and bottom right of bounding boxes surrounding the blueprints
     #then finds the center of the bounding box.
@@ -49,8 +99,8 @@ class Character:
             center_y = ((y_max - y_min) / 2) + y_min
 
             center_xy_list.append((center_x, center_y))
-            self.center_coords = center_xy_list
 
+        self.center_coords = center_xy_list
         return center_xy_list
 
     #Uses the distance formula to find the blueprint that is located closest to the position (750, 950) which is where
@@ -70,51 +120,8 @@ class Character:
         self.closest_bp = closest_point
         return closest_point
 
-    def is_close_x(self, closest_bp):
-        if closest_bp:
-            px = self.px
-            bx = closest_bp[0]
-            return abs(px - bx) < 50
-
-    def is_close_y(self, closest_bp):
-        if closest_bp:
-            py = self.py
-            by = closest_bp[1]
-            return abs(py - by) < 50
-
-    def reached_center(self):
-        if self.is_close_x(self.closest_bp) and self.is_close_y(self.closest_bp):
-            return True
-
-    def move_up(self):
-        # if py > by:
-        keyboard.press('w')
-        self.is_moving_up = True
-
-    def stop_up(self):
-        # if self.is_close_y():
-        keyboard.release('w')
-        self.is_moving_up = False
-
-    def start_digging(self):
-        mouse.press('left')
-
-    def stop_digging(self):
-        mouse.release('left')
-
-    def turn_camera_left(self):
-        keyboard.press('.')
-        time.sleep(.004)
-        keyboard.release('.')
-
-    def turn_camera_right(self):
-        keyboard.press(',')
-        time.sleep(.004)
-        keyboard.release(',')
-
     def nav_camera(self, threshold):
-        self.get_post_coords(self.bp_locations)
-        self.closest_bp = self.get_closest(self.center_coords)
+        self.update_closest_bp()
 
         if self.closest_bp: #Avoid errors, if no BP is detected, do nothing..
             bp_x, bp_y = self.closest_bp
@@ -132,6 +139,7 @@ class Character:
         elif self.center_condition:
             self.stop_up()
 
+
     def check_if_digging(self):
         screenshot = Screencap.take_screenshot()
         screenshot = np.array(screenshot)
@@ -140,7 +148,9 @@ class Character:
         (thresh, thing) = cv.threshold(screenshot, 127, 255, cv.THRESH_BINARY)
         (thresh1, digging_bw) = cv.threshold(perc_img, 127, 255, cv.THRESH_BINARY)
 
+
         currently_digging = Finder.find_items(image=thing, img_to_match=digging_bw, debug=False, threshold=.8)
+
 
         if currently_digging:
             if len(currently_digging):
@@ -148,13 +158,23 @@ class Character:
         else:
             self.is_digging = False
 
-
-        print(f"SELF_IS_DIGGING: {self.is_digging}\n")
-        print(f"(currently_digging): {currently_digging}\n")
+    def update_closest_bp(self):
+        self.get_post_coords(self.bp_locations)
+        self.closest_bp = self.get_closest(self.center_coords)
 
     def lazy(self):
-        self.move_to_center()
-        self.check_if_digging()
-        if self.center_condition and not self.is_digging:
-            self.start_digging()
+        self.update_closest_bp()
+        self.move_to_center() #Updates self.center_condition, and moves character to the center of blueprint
+        self.check_if_digging() #Updates self.is_digging
 
+        if self.center_condition:
+            self.start_digging()
+        else:
+            self.stop_digging()
+
+        self.display_attr()
+
+
+
+    ##TODO: Not turning fast enough, bug when starting to dig
+    

@@ -21,13 +21,8 @@ if __name__ == '__main__':
     model.conf = .85
     climb_process = mp.Process(target=mike.always_climb)  # Commented out for testing. Un-comment these two lines when testing movement.
     climb_process.start()
-
     mike.position_mouse()
 
     while True:
         bp_locations = detect_bp()
-        # mike.nav_camera(40)
-        # mike.move_to_center()
-        # mike.check_if_digging()
         mike.lazy()
-
