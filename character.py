@@ -157,18 +157,20 @@ class Character:
         self.update_closest_bp()
         self.has_reached_center()
 
-        if not self.center_condition:
-            self.move_to_center()
+        if self.center_condition is not None:
+            if not self.center_condition:
+                self.move_to_center()
+            else:
+                if self.center_condition:
+                    self.stop_up()
+                if not self.is_digging:
+                    time.sleep(1)
+                    self.start_digging()
+                    self.is_digging = True
+
+            if not self.center_condition and self.is_digging:
+                self.stop_digging()
+                self.is_digging = False
         else:
-            if self.center_condition:
-                self.stop_up()
-            if not self.is_digging:
-                time.sleep(1)
-                self.start_digging()
-                self.is_digging = True
-
-        if not self.center_condition and self.is_digging:
-            self.stop_digging()
-            self.is_digging = False
-
+            pass
         self.display_attr()
