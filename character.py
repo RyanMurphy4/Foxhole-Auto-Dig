@@ -23,7 +23,6 @@ class Character:
         self.center_condition = False
 
         self.is_moving_up = False
-        self.reached_bp = False
         self.is_digging = False
 
     def display_attr(self):
@@ -52,24 +51,17 @@ class Character:
             by = closest_bp[1]
             return abs(py - by) < 50
 
-    def reached_center(self):
-        if self.is_close_x(self.closest_bp) and self.is_close_y(self.closest_bp):
-            return True
-        else:
-            return False
+    def has_reached_center(self):
+        self.center_condition = self.is_close_x(self.closest_bp) and self.is_close_y(self.closest_bp)
 
     def move_up(self):
-        # if py > by:
         keyboard.press('w')
-        self.is_moving_up = True
+
 
     def stop_up(self):
-        # if self.is_close_y():
         keyboard.release('w')
-        self.is_moving_up = False
 
     def start_digging(self):
-        self.stop_up()
         mouse.press('left')
 
     def stop_digging(self):
@@ -132,7 +124,6 @@ class Character:
                     self.turn_camera_right()
 
     def move_to_center(self):
-        self.center_condition = self.reached_center()
         if not self.center_condition:
             self.nav_camera(40)
             self.move_up()
@@ -164,17 +155,20 @@ class Character:
 
     def lazy(self):
         self.update_closest_bp()
-        self.move_to_center() #Updates self.center_condition, and moves character to the center of blueprint
-        self.check_if_digging() #Updates self.is_digging
+        self.has_reached_center()
 
-        if self.center_condition:
-            self.start_digging()
+        if not self.center_condition:
+            self.move_to_center()
         else:
+            if self.center_condition:
+                self.stop_up()
+            if not self.is_digging:
+                time.sleep(1)
+                self.start_digging()
+                self.is_digging = True
+
+        if not self.center_condition and self.is_digging:
             self.stop_digging()
+            self.is_digging = False
 
         self.display_attr()
-
-
-
-    ##TODO: Not turning fast enough, bug when starting to dig
-    
