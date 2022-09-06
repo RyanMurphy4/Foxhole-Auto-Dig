@@ -25,10 +25,17 @@ class Character:
         self.is_moving_up = False
         self.is_digging = False
 
+        self.searching_condition = False
+        self.right_click_condition = False
+        self.zoomed_bp_found = False
+        self.zoomed_blueprint = ''
+
+
     def display_attr(self):
         print(f"self.center_condition: {self.center_condition}")
         print(f"self.is_digging: {self.is_digging}")
         print(f"self.closest_bp: {self.closest_bp}")
+        print(f"self.camera_positioned: {self.camera_positioned}")
 
     #Seperate process that constantly presses space, this is to avoid your character getting stuck on other blueprints/objects
     def always_climb(self):
@@ -56,10 +63,12 @@ class Character:
 
     def move_up(self):
         keyboard.press('w')
+        self.is_moving_up = True
 
 
     def stop_up(self):
         keyboard.release('w')
+        self.is_moving_up = False
 
     def start_digging(self):
         mouse.press('left')
@@ -120,12 +129,35 @@ class Character:
             if abs(bp_x - 940) > threshold: #If bp center isn't within 'threshold' amount of pixels,
                 if bp_x < 940:
                     self.turn_camera_left()
+                    self.camera_positioned = False
                 elif bp_x > 940:
                     self.turn_camera_right()
+                    self.camera_positioned = False
+
+            else:
+                self.camera_positioned = True
+
+    def nav_zoomed(self, threshold, blueprint):
+        self.update_closest_bp()
+
+        if blueprint: #Avoid errors, if no BP is detected, do nothing..
+            bp_x, bp_y = blueprint
+            if abs(bp_x - 940) > threshold: #If bp center isn't within 'threshold' amount of pixels,
+                if bp_x < 940:
+                    self.turn_camera_left()
+                    self.camera_positioned = False
+                elif bp_x > 940:
+                    self.turn_camera_right()
+                    self.camera_positioned = False
+
+            else:
+                self.camera_positioned = True
+
 
     def move_to_center(self):
         if not self.center_condition:
             self.nav_camera(40)
+            # if not self.is_moving_up: ### Delete if statement if you want to spam "w" but this makes it so that you don't spam w..
             self.move_up()
         elif self.center_condition:
             self.stop_up()
@@ -146,31 +178,74 @@ class Character:
         if currently_digging:
             if len(currently_digging):
                 self.is_digging = True
+                return True
         else:
             self.is_digging = False
+            return False
 
     def update_closest_bp(self):
         self.get_post_coords(self.bp_locations)
         self.closest_bp = self.get_closest(self.center_coords)
 
-    def lazy(self):
+    def search_for_blueprint(self):
+        if not self.right_click_condition:
+            mouse.press('right')
+            time.sleep(1)
+            self.right_click_condition = True
+        else:
+            self.get_post_coords(self.bp_locations)
+            self.zoomed_blueprint = self.get_closest(self.center_coords)
+
+
+            if self.zoomed_blueprint == "":
+                print("Can't find bp, turning camera 360")
+                self.turn_camera_right()
+            else:
+                print("Blueprint found.")
+                self.nav_zoomed(20, self.zoomed_blueprint)
+
+                if self.camera_positioned:
+                    print("Camera is positioned on the zoomed out blueprint..")
+                    mouse.release('right')
+                    time.sleep(1)
+                    self.move_up()
+                    time.sleep(3)
+                    self.right_click_condition = False
+
+
+
+
+
+
+    def lazy(self): ## @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         self.update_closest_bp()
         self.has_reached_center()
 
-        if self.center_condition is not None:
-            if not self.center_condition:
-                self.move_to_center()
-            else:
-                if self.center_condition:
-                    self.stop_up()
-                if not self.is_digging:
-                    time.sleep(1)
-                    self.start_digging()
-                    self.is_digging = True
-
-            if not self.center_condition and self.is_digging:
-                self.stop_digging()
-                self.is_digging = False
+        if self.center_condition is None:
+            self.searching_condition = True
         else:
-            pass
+            self.searching_condition = False
+
+        if self.center_condition is not None and self.right_click_condition:
+            self.searching_condition = True
+
+
+        if self.searching_condition:
+            self.search_for_blueprint()
+        else:
+            if self.is_digging:
+                self.check_if_digging()
+
+            else:
+                if self.center_condition and not self.is_digging:
+                    self.stop_up()
+                    self.start_digging()
+                    time.sleep(1)
+                    self.check_if_digging()
+
+                if not self.is_digging and self.closest_bp != "":
+                    self.nav_camera(40)
+                    self.move_to_center()
+
         self.display_attr()
+

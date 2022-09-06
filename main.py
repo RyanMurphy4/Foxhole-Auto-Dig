@@ -23,6 +23,6 @@ if __name__ == '__main__':
     climb_process.start()
     mike.position_mouse()
 
-    while True:
+    while True: 
         bp_locations = detect_bp()
         mike.lazy()
